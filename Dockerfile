@@ -1,6 +1,6 @@
 FROM alpine:3.11
 
-ADD resource/ /opt/resource/
+# ADD resource/ /opt/resource/
 # ADD itest/ /opt/itest/
 
 # Install uuidgen
@@ -27,3 +27,9 @@ ADD https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 /tmp/
 RUN install /tmp/yq_linux_amd64 /usr/local/bin/yq && \
   yq --version && \
   rm -f /tmp/yq_linux_amd64
+
+ADD resource/ /opt/resource/
+RUN chmod +x /opt/resource/*
+
+WORKDIR /
+ENTRYPOINT ["/bin/bash"]

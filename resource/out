@@ -53,3 +53,11 @@ cf target -o $org -s $space
 
 echo "checking cf apps"  >&2
 echo cf apps >&2
+
+jq -n \
+--arg timestamp $(date +%s) \
+'{
+  version: {
+    timestamp: $timestamp
+  }
+}' >&3

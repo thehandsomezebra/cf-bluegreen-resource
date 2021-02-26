@@ -1,7 +1,7 @@
 FROM alpine:3.11
 
 ADD resource/ /opt/resource/
-ADD itest/ /opt/itest/
+# ADD itest/ /opt/itest/
 
 # Install uuidgen
 RUN apk add --no-cache ca-certificates curl bash jq util-linux

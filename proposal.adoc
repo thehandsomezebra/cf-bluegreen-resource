@@ -1,0 +1,76 @@
+= `cf-cli-resource` - Blue/Green Deploy
+
+== Proposal
+
+`cf-cli-resource` currently supports the `zero-downtime-push` command that performs the standard
+deployment where the new application is configured with the same routes as the existing
+application, and the old application is subsequently removed. We'd like a new command, `blue-green`, that takes this a step further by adding a smoke test phase where the blue
+application has a configurable set of test(s) to run in order to verify the blue application
+is indeed ready to be switched over to green. It should also have the ability to leave
+the blue should any errors occur.
+
+== Design
+
+[source,yaml]
+----
+jobs:
+  - name: deploy
+    public: false
+    serial: true
+    plan:
+      - get: get-application
+        trigger: true
+      - put: deploy
+        resource: cf-env
+        inputs:
+          - app
+        params:
+          command: blue-green
+          org: myorg
+          space: myspace
+          manifest: app/manifest.yml
+          path: app/my-app.jar
+          current_app_name: my-app
+          show_app_log: true
+          clean_up: false
+          smoke_tests:
+          - app/smoke_test_1.sh
+          - app/smoke_test_2.sh
+
+resources:
+  - name: get-application
+    ....
+
+  - name: cf-env
+    icon: cloud
+    type: cf-cli-resource
+    source:
+      ....
+
+resource_types:
+  - name: cf-cli-resource
+    type: registry-image
+    source:
+      repository: nulldriver/cf-cli-resource
+      tag: latest
+----
+
+== Flow
+
+. Check if green exists
+** If true, rename green with suffix `-venerable`
+. Generate random route
+** Need to write something for this, remembering the domain name cannot be more than 63 characters
+. Deploy blue app with random route
+. For each smoke test
+.. Execute passing in the random route as the first input (`$1`)
+.. Capture the result
+*** If `exit_code` is 0, continue
+*** Else
+**** If `clean_up` is `true`
+***** Delete blue
+***** Rename green by removing suffix `-venerable`
+**** `exit 1`
+. Unmap random route from blue
+. Map route(s) from incoming manifest to blue
+. Delete green

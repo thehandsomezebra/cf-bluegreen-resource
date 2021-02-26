@@ -24,6 +24,14 @@ api=$(jq -r '.source.api // ""' < "$payload")
 username=$(jq -r '.source.username // ""' < "$payload")
 password=$(jq -r '.source.password // ""' < "$payload")
 
+skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < "$payload")
+if [$skip_cert_check==true]
+    then
+    skipssl=" --skip-ssl-validation"
+    else
+    skipssl=""
+fi
+
 ## test in the hijacked container
 ## cd /tmp/bluegreen | ls
 ##cat resource-request.RANDOMWHATEVER | jq -r '.source.username // ""'
@@ -32,7 +40,7 @@ echo "setting api"  >&2
  cf api "$api"
  echo "success" >&2
 echo "logging in"  >&2
- cf auth_user "$username" "$password"
+ cf login -u "$username" -p "$password" "$skipssl"
 
  echo "success" >&2
 
@@ -42,6 +50,6 @@ cf target -o $org -s $space
 
  echo "success" >&2
 
- 
+
 echo "checking cf apps"  >&2
 echo cf apps >&2

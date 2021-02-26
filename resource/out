@@ -65,8 +65,10 @@ if [cf app $current_app_name 2>&1 ==1]
 fi
 
 ## rename current_app_name to blue
+echo ""  >&2
 blue_app_name="$current_app_name-blue"
 cf rename "$current_app_name" "$blue_app_name"
+echo "success" >&2
 
 
 
@@ -93,14 +95,17 @@ original_domain=$(echo $original_route | sed -e "s/$current_app_name.//g")
 ###############
 # begin setting up args for new route
 
+echo "Creating new route..."  >&2
 cf create-route $space $original_domain --hostname $green_app_name
+echo "success" >&2
 
 #route now exists as:
 green_route_path=$green_app_name.$original_domain
 
 
-
+echo "Pushing new green app $green_app_name to $green_route_path"  >&2
 cf push $green_app_name -f $manifest -p $path --route-path "$green_route_path"
+echo "success" >&2
 
 #if show_app_log then cf logs "$app_name" --recent
 #cf logs "$green_app_name" --recent
@@ -129,21 +134,29 @@ cf push $green_app_name -f $manifest -p $path --route-path "$green_route_path"
 
 
 #if success from smoke test (or no smoke tests offered)
+echo "...Smoke tests would go here, if we did that...."  >&2
 
-# . Map route(s) from incoming manifest to green
+# . Map route from incoming manifest to green
+echo "Mapping original route to green"  >&2
 cf map-route $green_app_name $original_domain -n $current_app_name
+echo "success" >&2
 
 
 # . Unmap route to blue
+echo "Unmapping route to blue"  >&2
 cf unmap-route $blue_app_name $original_domain -n $current_app_name
+echo "success" >&2
 
-# . Unmap temporary route from green
+# . Unmap temporary route to green
+echo "Unmapping temporary route to green"  >&2
 cf unmap-route $green_app_name $original_domain -n $green_app_name
+echo "success" >&2
 
 
 # . Rename green app to the original app name
+echo "Renaming green app to the original app name"  >&2
 cf rename $green_app_name $current_app_name
-
+echo "success" >&2
 
 ##IF CLEANUP IS TRUE
 

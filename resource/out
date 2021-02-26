@@ -17,11 +17,12 @@ mkdir -p "${TMPDIR}"
 payload=$(mktemp "$TMPDIR/resource-request.XXXXXX")
 cat > "$payload" <&0
 
-# greeting=$(jq -r '.params.greeting // ""' < "$payload")
-# echo "Param greeting says: $greeting" >&2
 org=$(jq -r '.params.org // ""' < "$payload")
 space=$(jq -r '.params.space // ""' < "$payload")
 
+
+echo "setting target"  >&2
+
 cf target -o $org -s $space
-echo "checking cf targets"  >&2
-echo cf targets >&2
+echo "checking cf apps"  >&2
+echo cf apps >&2

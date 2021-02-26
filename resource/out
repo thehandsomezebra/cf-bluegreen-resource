@@ -12,7 +12,7 @@ if [[ -z "$source" ]]; then
 fi
 # for jq
 PATH=/usr/local/bin:$PATH
-export TMPDIR=${TMPDIR:-/tmp/hello}
+export TMPDIR=${TMPDIR:-/tmp/bluegreen}
 mkdir -p "${TMPDIR}"
 payload=$(mktemp "$TMPDIR/resource-request.XXXXXX")
 cat > "$payload" <&0
@@ -20,9 +20,28 @@ cat > "$payload" <&0
 org=$(jq -r '.params.org // ""' < "$payload")
 space=$(jq -r '.params.space // ""' < "$payload")
 
+api=$(jq -r '.source.api // ""' < "$payload")
+username=$(jq -r '.source.username // ""' < "$payload")
+password=$(jq -r '.source.password // ""' < "$payload")
+
+## test in the hijacked container
+## cd /tmp/bluegreen | ls
+##cat resource-request.RANDOMWHATEVER | jq -r '.source.username // ""'
+
+echo "setting api"  >&2
+ cf api "$api"
+ echo "success" >&2
+echo "logging in"  >&2
+ cf auth_user "$username" "$password"
+
+ echo "success" >&2
 
 echo "setting target"  >&2
 
 cf target -o $org -s $space
+
+ echo "success" >&2
+
+ 
 echo "checking cf apps"  >&2
 echo cf apps >&2

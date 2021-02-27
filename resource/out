@@ -59,10 +59,11 @@ cf target -o $org -s $space
 echo "success" >&2
 
 ##check that the app passed in legit
-if [cf app $current_app_name 2>&1 ==1]
-    echo "App $current_app_name does not exist" >&2
-    exit 1
-fi
+# if [cf app $current_app_name 2>&1 ==1]  ##I gotta work on this - but for now, pass in legit app names
+#     then
+#         echo "App $current_app_name does not exist" >&2
+#         exit 1
+# fi
 
 ## rename current_app_name to blue
 echo ""  >&2
@@ -160,8 +161,10 @@ echo "success" >&2
 
 ##IF CLEANUP IS TRUE
 
-# . Delete blue
-#cf delete $blue_app_name
+#. Delete blue
+echo "Deleting $blue_app_name"  >&2
+cf delete $blue_app_name
+echo "success" >&2
 
 # OR rename it, so it can be looked at later,
 #cf rename $blue_app_name $current_app_name-old

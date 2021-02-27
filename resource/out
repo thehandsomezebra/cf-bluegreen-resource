@@ -23,7 +23,8 @@ space=$(jq -r '.params.space // ""' < "$payload")
 current_app_name=$(jq -r '.params.current_app_name // ""' < "$payload")
 manifest_file=$(jq -r '.params.manifest // ""' < "$payload")
 manifest=/tmp/build/put/$manifest_file
-path=$(jq -r '.params.path // ""' < "$payload")
+path_file=$(jq -r '.params.path // ""' < "$payload")
+path=/tmp/build/put/$path_file
 show_app_log=
 no_start=$(jq -r '.params.no_start // ""' < "$payload")
 

@@ -66,8 +66,8 @@ echo "success" >&2
 # fi
 
 ## rename current_app_name to blue
-echo ""  >&2
 blue_app_name="$current_app_name-blue"
+echo "Renaming $current_app_name to $blue_app_name"  >&2
 cf rename "$current_app_name" "$blue_app_name"
 echo "success" >&2
 

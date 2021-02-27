@@ -71,7 +71,7 @@ echo "Renaming $current_app_name to $blue_app_name"  >&2
 cf rename "$current_app_name" "$blue_app_name"
 echo "success" >&2
 
-
+###### FRIDAY - Success to here.
 
 
 ##set up variable for the new app name
@@ -89,14 +89,14 @@ green_app_name="$current_app_name-green"
 ###############
     ##get the domain from the input
 #domain=$(get_option '.domain')
-original_route=$(cf app $current_app_name | grep routes | awk '{print $2}')
+original_route=$(cf app $blue_app_name | grep routes | awk '{print $2}')
 original_domain=$(echo $original_route | sed -e "s/$current_app_name.//g")
  #hostname=$(get_option '.hostname')
     ## new route will be $green_app_name.$original_domain
 ###############
 # begin setting up args for new route
 
-echo "Creating new route..."  >&2
+echo "Creating new temporary route..."  >&2
 cf create-route $space $original_domain --hostname $green_app_name
 echo "success" >&2
 
@@ -104,7 +104,7 @@ echo "success" >&2
 green_route_path=$green_app_name.$original_domain
 
 
-echo "Pushing new green app $green_app_name to $green_route_path"  >&2
+echo "Pushing new green app $green_app_name with route-path of $green_route_path"  >&2
 cf push $green_app_name -f $manifest -p $path --route-path "$green_route_path"
 echo "success" >&2
 

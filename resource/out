@@ -166,11 +166,13 @@ echo "success" >&2
 
 # . Unmap temporary route to green
 echo "Unmapping temporary route to green"  >&2
-#cf unmap-route $green_app_name $original_domain -n $green_app_name
+cf unmap-route $green_app_name $original_domain -n $green_hostname
 echo "success" >&2
 
 # . delete the unused green route
-#cf delete-route $original_domain -n $green_app_name
+echo "Delete unused green route"  >&2
+cf delete-route $original_domain -n $green_hostname
+echo "success" >&2
 
 # . Rename green app to the original app name
 echo "Renaming green app to the original app name"  >&2
@@ -181,7 +183,7 @@ echo "success" >&2
 
 #. Delete blue
 echo "Deleting $blue_app_name"  >&2
-#cf delete $blue_app_name
+cf delete $blue_app_name
 echo "success" >&2
 
 # OR rename it, so it can be looked at later,

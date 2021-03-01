@@ -115,8 +115,13 @@ echo "success" >&2
 
 #fly -t main-lab-ops hijack -j bluegreen-test-config-server-pipeline/deploy-sandbox
 
-echo "Pushing new green app $green_app_name with route-path of $green_route_path"  >&2
-cf push $green_app_name -f $manifest -p $path --no-route   >&2
+echo "Pushing new green app $green_app_name with no route."  >&2
+cf push $green_app_name -f $manifest -p $path --no-route
+echo "success" >&2
+
+#map green app to green route
+echo "Mapping green app $green_app_name to $green_route_path"  >&2
+cf map-route $green_app_name $original_domain -n $green_hostname
 echo "success" >&2
 
 #if show_app_log then cf logs "$app_name" --recent

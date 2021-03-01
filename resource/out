@@ -182,8 +182,12 @@ echo "success" >&2
 ##IF CLEANUP IS TRUE
 
 #. Delete blue
-echo "Deleting $blue_app_name"  >&2
-cf delete $blue_app_name
+echo "Deleting app $blue_app_name"  >&2
+cf delete $blue_app_name -f
+echo "success" >&2
+
+echo "Deleting green route "  >&2
+cf delete-route $original_domain -n $green_hostname -f
 echo "success" >&2
 
 # OR rename it, so it can be looked at later,

@@ -155,7 +155,7 @@ echo "...Smoke tests would go here, if we did that...."  >&2
 
 # . Map route from incoming manifest to green
 echo "Mapping original route to green"  >&2
-#cf map-route $green_app_name $original_domain -n $current_app_name
+cf map-route $green_app_name $original_domain -n $blue_app_name
 echo "success" >&2
 
 

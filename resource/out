@@ -155,7 +155,7 @@ echo "...Smoke tests would go here, if we did that...."  >&2
 
 # . Map route from incoming manifest to green
 echo "Mapping original route to green"  >&2
-cf map-route $green_app_name $original_domain -n $blue_app_name
+cf map-route $green_app_name $original_domain -n $current_app_name
 echo "success" >&2
 
 
@@ -170,7 +170,7 @@ echo "Unmapping temporary route to green"  >&2
 echo "success" >&2
 
 # . delete the unused green route
-#cf delete-route $original_domain -n green-$original_hostname
+#cf delete-route $original_domain -n $green_app_name
 
 # . Rename green app to the original app name
 echo "Renaming green app to the original app name"  >&2

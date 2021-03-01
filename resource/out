@@ -174,7 +174,7 @@ echo "success" >&2
 
 # . Rename green app to the original app name
 echo "Renaming green app to the original app name"  >&2
-#cf rename $green_app_name $current_app_name
+cf rename $green_app_name $current_app_name
 echo "success" >&2
 
 ##IF CLEANUP IS TRUE

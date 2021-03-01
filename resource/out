@@ -161,7 +161,7 @@ echo "success" >&2
 
 # . Unmap route to blue
 echo "Unmapping route to blue"  >&2
-#cf unmap-route $blue_app_name $original_domain -n $current_app_name
+cf unmap-route $blue_app_name $original_domain -n $current_app_name
 echo "success" >&2
 
 # . Unmap temporary route to green

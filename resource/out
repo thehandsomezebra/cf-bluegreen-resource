@@ -15,33 +15,29 @@ PATH=/usr/local/bin:$PATH
 export TMPDIR=${TMPDIR:-/tmp/bluegreen}
 mkdir -p "${TMPDIR}"
 payload=$(mktemp "$TMPDIR/resource-request.XXXXXX")
-cat > "$payload" <&0
+cat >"$payload" <&0
 
 #from the task
-org=$(jq -r '.params.org // ""' < "$payload") #required
-space=$(jq -r '.params.space // ""' < "$payload") #required
-current_app_name=$(jq -r '.params.current_app_name // ""' < "$payload") #required
+org=$(jq -r '.params.org // ""' <"$payload")                           #required
+space=$(jq -r '.params.space // ""' <"$payload")                       #required
+current_app_name=$(jq -r '.params.current_app_name // ""' <"$payload") #required
 
-
-path_file=$(jq -r '.params.path // ""' < "$payload") #optional
-if [ -z ${path_file+x} ]
-  then
-    path=
-  else
-    path=/tmp/build/put/$path_file
+path_file=$(jq -r '.params.path // ""' <"$payload") #optional
+if [ -z ${path_file+x} ]; then
+  path=
+else
+  path=/tmp/build/put/$path_file
 fi
 
-manifest_file_location=$(jq -r '.params.manifest // ""' < "$payload") #required
+manifest_file_location=$(jq -r '.params.manifest // ""' <"$payload") #required
 manifest=/tmp/build/put/$manifest_file_location
 ###
 
-
 ##############################################################
 #get and set manifest variables
-manifest_env_variables_json=$(jq -r '.params.manifest_env_variables // ""' < "$payload")
-if [[ ! -z ${manifest_env_variables_json+x} ]]
-  then   #append these variables to the manifest yml file under env:
-    #eval $( echo $manifest_env_variables_json | jq -r 'to_entries | .[] | .key + "=\"" + .value + "\""')
+manifest_env_variables_json=$(jq -r '.params.manifest_env_variables // ""' <"$payload")
+if [[ ! -z ${manifest_env_variables_json+x} ]]; then #append these variables to the manifest yml file under env:
+  #eval $( echo $manifest_env_variables_json | jq -r 'to_entries | .[] | .key + "=\"" + .value + "\""')
   get_keys() {
     echo "$manifest_env_variables_json" | jq -r 'keys[]'
   }
@@ -69,69 +65,58 @@ if [[ ! -z ${manifest_env_variables_json+x} ]]
     fi
   done
 
-
 fi
 
 ##############################################################
 
-smoketest_file=$(jq -r '.params.smoketest // ""' < "$payload") #optional
-if [ -z ${smoketest_file+x} ]
-  then
-    smoketest=
-  else
-    smoketest=/tmp/build/put/$smoketest_file
-    ## load in params, if any
-      smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' < "$payload")
-      if [[ ! -z ${smoketest_variables+x} ]]
-        then   #set all those params as actual
-         eval $( echo $smoketest_vars_json | jq -r 'to_entries | .[] | .key + "=\"" + .value + "\""')
-      fi
-    # jq '.key' <<< "$json_data"
+smoketest_file=$(jq -r '.params.smoketest // ""' <"$payload") #optional
+if [ -z ${smoketest_file+x} ]; then
+  smoketest=
+else
+  smoketest=/tmp/build/put/$smoketest_file
+  ## load in params, if any
+  smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
+  if [[ ! -z ${smoketest_variables+x} ]]; then #set all those params as actual
+    eval $(echo $smoketest_vars_json | jq -r 'to_entries | .[] | .key + "=\"" + .value + "\""')
+  fi
+  # jq '.key' <<< "$json_data"
 
 fi
 
-no_start=$(jq -r '.params.no_start // ""' < "$payload") #optional
-if [$no_start==true]
-    then
-     no_start_option=" --no-start"
-    else
-     no_start_option=""
+no_start=$(jq -r '.params.no_start // ""' <"$payload") #optional
+if [$no_start==true]; then
+  no_start_option=" --no-start"
+else
+  no_start_option=""
 fi
 
-
-keep_old_app=$(jq -r '.params.keep_old_app // ""' < "$payload") #optional
-
+keep_old_app=$(jq -r '.params.keep_old_app // ""' <"$payload") #optional
 
 #from the resource
-api=$(jq -r '.source.api // ""' < "$payload")
-username=$(jq -r '.source.username // ""' < "$payload")
-password=$(jq -r '.source.password // ""' < "$payload")
+api=$(jq -r '.source.api // ""' <"$payload")
+username=$(jq -r '.source.username // ""' <"$payload")
+password=$(jq -r '.source.password // ""' <"$payload")
 
-skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < "$payload")
-if [$skip_cert_check==true]
-    then
-    skipssl=" --skip-ssl-validation"
-    else
-    skipssl=""
+skip_cert_check=$(jq -r '.source.skip_cert_check // ""' <"$payload")
+if [$skip_cert_check==true]; then
+  skipssl=" --skip-ssl-validation"
+else
+  skipssl=""
 fi
 
-
-
-
-
 ## to test in the hijacked container:
-    #.source. is from resource  
-    #.params. is from task
+#.source. is from resource
+#.params. is from task
 
 ## cd /tmp/bluegreen | ls
 ## cat resource-request.RANDOMWHATEVER | jq -r '.[]'
 ## cat resource-request.RANDOMWHATEVER | jq -r '.source.username // ""'
 
-echo "logging in"  >&2
+echo "logging in" >&2
 cf login -a "$api" -u "$username" -p "$password" $skipssl
 echo "success" >&2
 
-echo "setting target"  >&2
+echo "setting target" >&2
 cf target -o $org -s $space
 echo "success" >&2
 
@@ -144,15 +129,15 @@ echo "success" >&2
 
 ## rename current_app_name to blue
 blue_app_name="blue-$current_app_name"
-echo "Renaming $current_app_name to $blue_app_name"  >&2
+echo "Renaming $current_app_name to $blue_app_name" >&2
 cf rename "$current_app_name" "$blue_app_name"
 echo "success" >&2
 
 ##set up a few variables
 green_app_name="green-$current_app_name"
 original_route=$(cf app $blue_app_name | grep routes | awk '{print $2}')
-original_hostname="$(cut -d '.' -f 1 <<< "$original_route" )"
-original_domain="$(cut -d '.' -f 2- <<< "$original_route" )"
+original_hostname="$(cut -d '.' -f 1 <<<"$original_route")"
+original_domain="$(cut -d '.' -f 2- <<<"$original_route")"
 
 #new temporary green hosthame:
 green_hostname=green-$original_hostname
@@ -160,122 +145,108 @@ green_hostname=green-$original_hostname
 #new temporary route:
 green_route_path=$green_hostname.$original_domain
 
-echo "Creating new temporary route of $green_route_path..."  >&2
+echo "Creating new temporary route of $green_route_path..." >&2
 # echo "original_route: $original_route"  >&2
 # echo "original_domain: $original_domain"  >&2
 cf create-route $space $original_domain --hostname $green_hostname
 echo "success" >&2
 
-echo "Pushing new green app $green_app_name with no route."  >&2
+echo "Pushing new green app $green_app_name with no route." >&2
 cf push $green_app_name -f $manifest -p $path --no-route $no_start_option
 echo "success" >&2
 
 #map green app to green route
-echo "Mapping green app $green_app_name to $green_route_path"  >&2
+echo "Mapping green app $green_app_name to $green_route_path" >&2
 cf map-route $green_app_name $original_domain -n $green_hostname
 echo "success" >&2
 
-
 ######################################SMOKE TEST######################################
 
+if [ -z ${smoketest+x} ]; then
+  echo "Smoketesting skipped." >&2
+else
+  echo "Beginning smoketest: $smoketest" >&2
 
-if [ -z ${smoketest+x} ]
- then 
-    echo "Smoketesting skipped." >&2
-  else 
-    echo "Beginning smoketest: $smoketest"  >&2
+  #setting smoketest url for green app
+  SMOKETEST_URL="https://$green_hostname.$original_domain"
 
-#setting smoketest url for green app
-SMOKETEST_URL="https://$green_hostname.$original_domain"
+  chmod +x $smoketest        #set the script to executable
+  TEST=$($smoketest)         #runs the test
+  STATUS=$?                  #gets the exit code/last executed cmd from the test
+  if [ $STATUS -eq 0 ]; then # report back on smoketest
+    echo "Smoketest successfully passed!" >&2
+  else
+    echo "Smoketest failed." >&2
+    echo "Running cleanup..." >&2
+    # . Rename blue app to the original app name
+    echo "Renaming blue app to the original app name" >&2
+    cf rename $blue_app_name $current_app_name
+    echo "success" >&2
 
+    # . delete the unused green route
+    echo "Delete green route" >&2
+    cf delete-route $original_domain -n $green_hostname
+    echo "success" >&2
 
-chmod +x $smoketest  #set the script to executable
-TEST=$($smoketest) #runs the test
-STATUS=$? #gets the exit code/last executed cmd from the test
-    if [ $STATUS -eq 0 ]  # report back on smoketest
-      then 
-          echo "Smoketest successfully passed!"  >&2
-      else 
-          echo "Smoketest failed."  >&2
-          echo "Running cleanup..."  >&2
-          cleanup_if_errors()
-    fi
+    #. Delete green
+    echo "Deleting app $green_app_name" >&2
+    cf delete $green_app_name -f
+    echo "success" >&2
+
+    exit 1
+  fi
 
 fi
 
-cleanup_if_errors(){
-    # . Rename blue app to the original app name
-  echo "Renaming blue app to the original app name"  >&2
-  cf rename $blue_app_name $current_app_name
-  echo "success" >&2
-
-  # . delete the unused green route
-  echo "Delete green route"  >&2
-  cf delete-route $original_domain -n $green_hostname
-  echo "success" >&2
-
-  #. Delete green
-  echo "Deleting app $green_app_name"  >&2
-  cf delete $green_app_name -f
-  echo "success" >&2
-
-  exit 1
-
-}
 ######################################################################################
 
-
 # . Map route from incoming manifest to green
-echo "Mapping original route to green app"  >&2
+echo "Mapping original route to green app" >&2
 cf map-route $green_app_name $original_domain -n $original_hostname
 echo "success" >&2
 
-
 # . Unmap route to blue
-echo "Unmapping route to blue"  >&2
+echo "Unmapping route to blue" >&2
 cf unmap-route $blue_app_name $original_domain -n $original_hostname
 echo "success" >&2
 
 # . Unmap temporary route to green
-echo "Unmapping temporary route to green"  >&2
+echo "Unmapping temporary route to green" >&2
 cf unmap-route $green_app_name $original_domain -n $green_hostname
 echo "success" >&2
 
 # . delete the unused green route
-echo "Delete unused green route"  >&2
+echo "Delete unused green route" >&2
 cf delete-route $original_domain -n $green_hostname
 echo "success" >&2
 
 # . Rename green app to the original app name
-echo "Renaming green app to the original app name"  >&2
+echo "Renaming green app to the original app name" >&2
 cf rename $green_app_name $current_app_name
 echo "success" >&2
 
-echo "Deleting green route "  >&2
+echo "Deleting green route " >&2
 cf delete-route $original_domain -n $green_hostname -f
 echo "success" >&2
 
-
 ##IF CLEANUP IS TRUE  (gotta write this part)
 
-if [$keep_old_app==true]
-    then
-    #delete blue
-      echo "Deleting app $blue_app_name"  >&2
-      cf delete $blue_app_name -f
-      echo "success" >&2
-    else
-    #rename blue
-      echo "Renaming app $blue_app_name to $current_app_name-old"  >&2
-      cf rename $blue_app_name $current_app_name-old  
-      echo "success" >&2
+if [$keep_old_app==true]; then
+  #delete blue
+  echo "Deleting app $blue_app_name" >&2
+  cf delete $blue_app_name -f
+  echo "success" >&2
+else
+  #rename blue
+  echo "Renaming app $blue_app_name to $current_app_name-old" >&2
+  cf rename $blue_app_name $current_app_name-old
+  echo "success" >&2
 fi
-
 
 ##done
 jq -n \
---arg timestamp $(date +%s) \
-'{
+  --arg timestamp $(date +%s) \
+  '{
   version: {
     timestamp: $timestamp
   }

@@ -172,7 +172,7 @@ else
   SMOKETEST_URL="https://$green_hostname.$original_domain"
 
   chmod +x $smoketest        #set the script to executable
-  TEST=$($smoketest)         #runs the test
+  TEST=$(source $smoketest)         #runs the test
   STATUS=$?                  #gets the exit code/last executed cmd from the test
   if [ $STATUS -eq 0 ]; then # report back on smoketest
     echo "Smoketest successfully passed!" >&2

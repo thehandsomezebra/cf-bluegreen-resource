@@ -84,7 +84,7 @@ else
 fi
 
 no_start=$(jq -r '.params.no_start // ""' <"$payload") #optional
-if [[ -n "$no_start" ]] && [[ $no_start==true ]] then; 
+if [[ -n "$no_start" ]] && [[ $no_start==true ]]; then
   no_start_option=" --no-start"
 else
   no_start_option=""

@@ -77,7 +77,7 @@ else
   ## load in params, if any
   smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
   if [[ ! -z ${smoketest_vars_json+x} ]]; then #set all those as variables here
-    smoketest_vars=$(echo $smoketest_vars_json | jq -r ' .params.smoketest_variables // "" | to_entries |  .[] | .key + "=\"" + .value + "\""')
+    smoketest_vars=$( echo $smoketest_vars_json | jq -r ' to_entries |  .[] | .key + "=\"" + .value + "\""')
     for key in ${smoketest_vars}; do
       eval ${key}
     done

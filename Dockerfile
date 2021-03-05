@@ -20,7 +20,7 @@ RUN apt-get update \
       bzip2 \
       certstrap \
       cf-cli \
-      cf6-cli \
+    #   cf6-cli \
       concourse-fly \
       credhub-cli \
       curl \

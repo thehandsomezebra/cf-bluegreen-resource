@@ -37,7 +37,7 @@ manifest=/tmp/build/put/$manifest_file_location
 #get and set manifest variables
 manifest_env_variables_json=$(jq -r '.params.manifest_env_variables // ""' <"$payload")
 if [[ ! -z ${manifest_env_variables_json+x} ]]; then #append these variables to the manifest yml file under env:
-  #eval $( echo $manifest_env_variables_json | jq -r 'to_entries | .[] | .key + "=\"" + .value + "\""')
+
   get_keys() {
     echo "$manifest_env_variables_json" | jq -r 'keys[]'
   }
@@ -76,11 +76,12 @@ else
   smoketest=/tmp/build/put/$smoketest_file
   ## load in params, if any
   smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
-  if [[ ! -z ${smoketest_variables+x} ]]; then #set all those params as actual
-    eval $(echo $smoketest_vars_json | jq -r 'to_entries | .[] | .key + "=\"" + .value + "\""')
+  if [[ ! -z ${smoketest_vars_json+x} ]]; then #set all those as variables here
+    smoketest_vars=$(echo $smoketest_vars_json | jq -r ' .params.smoketest_variables // "" | to_entries |  .[] | .key + "=\"" + .value + "\""')
+    for key in ${smoketest_vars}; do
+      eval ${key}
+    done
   fi
-  # jq '.key' <<< "$json_data"
-
 fi
 
 no_start=$(jq -r '.params.no_start // ""' <"$payload") #optional
@@ -98,7 +99,7 @@ username=$(jq -r '.source.username // ""' <"$payload")
 password=$(jq -r '.source.password // ""' <"$payload")
 
 skip_cert_check=$(jq -r '.source.skip_cert_check // ""' <"$payload")
-if [[ -n "$skip_cert_check" ]] && [[ $skip_cert_check==true ]]; then 
+if [[ -n "$skip_cert_check" ]] && [[ $skip_cert_check==true ]]; then
   skipssl=" --skip-ssl-validation"
 else
   skipssl=""

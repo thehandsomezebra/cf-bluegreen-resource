@@ -73,7 +73,7 @@ smoketest_file=$(jq -r '.params.smoketest // ""' <"$payload") #optional
 if [ -z ${smoketest_file+x} ]; then
   smoketest=
 else
-  smoketest=/tmp/build/put/$smoketest_file
+  smoketest="/tmp/build/put/$smoketest_file"
   ## load in params, if any
   smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
   if [[ ! -z ${smoketest_vars_json+x} ]]; then #set all those as variables here

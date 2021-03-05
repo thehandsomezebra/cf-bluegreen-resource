@@ -7,6 +7,7 @@ ENV VAULT_VERSION=1.2.2
 
 # base packages
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update \
     && apt-get install -yy wget gnupg \
     && wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add - \
@@ -19,7 +20,7 @@ RUN apt-get update \
       build-essential \
       bzip2 \
       certstrap \
-      cf-cli \
+    #   cf-cli \
     #   cf6-cli \
       concourse-fly \
       credhub-cli \
@@ -55,6 +56,23 @@ RUN apt-get update \
       zlib1g-dev \
       zlibc \
     && rm -rf /var/lib/apt/lists/*
+
+
+# Install Cloud Foundry cli v6
+ADD https://packages.cloudfoundry.org/stable?release=linux64-binary&version=6.53.0 /tmp/cf-cli.tgz
+RUN mkdir -p /usr/local/bin && \
+  tar -xf /tmp/cf-cli.tgz -C /usr/local/bin && \
+  cf --version && \
+  rm -f /tmp/cf-cli.tgz
+
+# Install Cloud Foundry cli v7
+# ADD https://packages.cloudfoundry.org/stable?release=linux64-binary&version=7.2.0 /tmp/cf7-cli.tgz
+# RUN mkdir -p /usr/local/bin /tmp/cf7-cli && \
+#   tar -xf /tmp/cf7-cli.tgz -C /tmp/cf7-cli && \
+#   install /tmp/cf7-cli/cf7 /usr/local/bin/cf7 && \
+#   cf7 --version && \
+#   rm -f /tmp/cf7-cli.tgz && \
+#   rm -rf /tmp/cf7-cli
 
 RUN curl -Lo vault.zip https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip \
     && unzip vault.zip \

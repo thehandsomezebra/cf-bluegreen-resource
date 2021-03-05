@@ -84,7 +84,7 @@ else
 fi
 
 no_start=$(jq -r '.params.no_start // ""' <"$payload") #optional
-if [$no_start==true]; then
+if [[ -n "$no_start" ]] && [[ $no_start==true ]] then; 
   no_start_option=" --no-start"
 else
   no_start_option=""
@@ -98,7 +98,7 @@ username=$(jq -r '.source.username // ""' <"$payload")
 password=$(jq -r '.source.password // ""' <"$payload")
 
 skip_cert_check=$(jq -r '.source.skip_cert_check // ""' <"$payload")
-if [$skip_cert_check==true]; then
+if [[ -n "$skip_cert_check" ]] && [[ $skip_cert_check==true ]]; then 
   skipssl=" --skip-ssl-validation"
 else
   skipssl=""

@@ -72,13 +72,13 @@ fi
 smoketest_file=$(jq -r '.params.smoketest // ""' <"$payload") #optional
 if [[ ! -z ${smoketest_file+x} ]]; then
 
-  smoketest="/tmp/build/put/$smoketest_file"
+  smoketest=/tmp/build/put/$smoketest_file  >&2
   ## load in params, if any
   smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
   if [[ ! -z ${smoketest_vars_json+x} ]]; then #set all those as variables here
     smoketest_vars=$( echo $smoketest_vars_json | jq -r ' to_entries |  .[] | .key + "=\"" + .value + "\""')
     for key in ${smoketest_vars}; do
-      eval ${key}
+      eval ${key} >&2
     done
   fi
 fi
@@ -165,13 +165,13 @@ echo "success" >&2
 if [ -z ${smoketest+x} ]; then
   echo "Smoketesting skipped." >&2
 else
-  echo "Beginning smoketest: $smoketest" >&2
+  echo "Beginning smoketest: full location: $smoketest  file: $smoketest_file" >&2
 
   #setting smoketest url for green app
   SMOKETEST_URL="https://$green_hostname.$original_domain"
 
   chmod +x $smoketest        #set the script to executable
-  TEST=$(source $smoketest)         #runs the test
+  TEST=$(source $smoketest )         #runs the test
   STATUS=$?                  #gets the exit code/last executed cmd from the test
   if [ $STATUS -eq 0 ]; then # report back on smoketest
     echo "Smoketest successfully passed!" >&2

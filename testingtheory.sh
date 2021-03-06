@@ -25,7 +25,9 @@ chmod +x ./theory.sh
 # Second, it allows us to skip the "exit", which would exit us out of all this parent script
 # Lastly, it also allows us to grab the last status it threw (either by cmd or passed via exit code)
 
-TEST=$(source ./theory.sh ) #runs the test -- note, we're just trying to get the exit code, nothing outputs to terminal yet
+file=theory.sh
+path=/Users/sfrantz/repos/github/cf-bluegreen-resource/$file
+TEST=$(source $path ) #runs the test -- note, we're just trying to get the exit code, nothing outputs to terminal yet
 STATUS1=$? #gets the exit code/last executed cmd from the test
 echo $TEST # we can see what the script output, if we want to - but it won't be formatted nicely.
 

@@ -120,12 +120,17 @@ echo "setting target" >&2
 cf target -o $org -s $space
 echo "success" >&2
 
+
+
+
 ##check that the app passed in legit
-# if [cf app $current_app_name 2>&1 ==1]  ##I gotta work on this - but for now, pass in legit app names
-#     then
-#         echo "App $current_app_name does not exist" >&2
-#         exit 1
-# fi
+if [[ `cf apps | grep $current_app_name` ]]; then 
+echo "$current_app_name found. Proceeding with Blue Green Deployment" >&2
+ else
+  echo "$current_app_name not found. Exiting." >&2
+  exit 1
+   fi
+
 
 ## rename current_app_name to blue
 blue_app_name="blue-$current_app_name"
@@ -229,9 +234,9 @@ echo "Deleting green route " >&2
 cf delete-route $original_domain -n $green_hostname -f
 echo "success" >&2
 
-##IF CLEANUP IS TRUE  (gotta write this part)
+#######If keep old app is true...
 
-if [$keep_old_app==true]; then
+if [[ -n "$keep_old_app"]] && [[$keep_old_app==true]]; then
   #delete blue
   echo "Deleting app $blue_app_name" >&2
   cf delete $blue_app_name -f
@@ -239,6 +244,10 @@ if [$keep_old_app==true]; then
 else
   #rename blue
   echo "Renaming app $blue_app_name to $current_app_name-old" >&2
+  if [[ `cf apps | grep $current_app_name-old` ]]; then 
+echo "Previous old app being removed..." >&2
+ cf delete $current_app_name-old -f
+   fi
   cf rename $blue_app_name $current_app_name-old
   echo "success" >&2
 fi

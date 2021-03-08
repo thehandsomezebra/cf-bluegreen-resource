@@ -40,6 +40,15 @@ A [manifest](https://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html) t
     keep_old_app: true
 ```
 
+```yml
+resource_types:
+  - name: cf-bluegreen-resource
+    type: registry-image
+    source:
+      repository: thehandsomezebra/cf-bluegreen-resource
+      tag: latest
+```
+
 ----
 
 ### Planned later improvements:

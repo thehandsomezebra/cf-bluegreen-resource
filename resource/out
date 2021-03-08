@@ -178,7 +178,7 @@ else
   TEST=$(source $smoketest)  #runs the test
   STATUS=$?                  #gets the exit code/last executed cmd from the test
   if [ $STATUS -eq 0 ]; then # report back on smoketest
-    echo "Smoketest successfully passed!" >&2
+    printf "${BGreen}Smoketest successfully passed!${NC}\n" >&2
   else
     echo "Smoketest failed." >&2
     echo "Running cleanup..." >&2
@@ -229,9 +229,6 @@ printf "${BBlue}Renaming green app to the original app name${NC}\n" >&2
 cf rename $green_app_name $current_app_name
 printf "${BGreen}Successful.${NC}\n" >&2
 
-printf "${BBlue}Deleting green route${NC}\n" >&2
-cf delete-route $original_domain -n $green_hostname -f
-printf "${BGreen}Successful.${NC}\n" >&2
 
 #######If keep old app is true...
 

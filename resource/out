@@ -5,6 +5,13 @@ set -e -u
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
+
+BRed='\033[1;31m'  #Bold red
+BGreen='\033[1;32m'       # Bold Green
+BBlue='\033[1;34m'        # Bold Blue
+NC='\033[0m' # No Color
+
+
 source=$1
 if [[ -z "$source" ]]; then
   echo "usage: $0 <path/to/source>"
@@ -112,31 +119,31 @@ fi
 ## cat resource-request.RANDOMWHATEVER | jq -r '.[]'
 ## cat resource-request.RANDOMWHATEVER | jq -r '.source.username // ""'
 
-echo "logging in" >&2
+printf "${BBlue}logging in${NC}\n"   >&2
 cf login -a "$api" -u "$username" -p "$password" $skipssl
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
-echo "setting target" >&2
+printf "${BBlue}setting target${NC}\n"   >&2
 cf target -o $org -s $space
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 
 
 
 ##check that the app passed in legit
 if [[ `cf apps | grep $current_app_name` ]]; then 
-echo "$current_app_name found. Proceeding with Blue Green Deployment" >&2
+printf "${BBlue}$current_app_name found. Proceeding with Blue Green Deployment${NC}\n"   >&2
  else
-  echo "$current_app_name not found. Exiting." >&2
+  printf "${BRed}$current_app_name not found. Exiting.${NC}\n"   >&2
   exit 1
    fi
 
 
 ## rename current_app_name to blue
 blue_app_name="blue-$current_app_name"
-echo "Renaming $current_app_name to $blue_app_name" >&2
+printf "${BBlue}Renaming $current_app_name to $blue_app_name ${NC}\n"   >&2
 cf rename "$current_app_name" "$blue_app_name"
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 ##set up a few variables
 green_app_name="green-$current_app_name"
@@ -150,27 +157,25 @@ green_hostname=green-$original_hostname
 #new temporary route:
 green_route_path=$green_hostname.$original_domain
 
-echo "Creating new temporary route of $green_route_path..." >&2
-# echo "original_route: $original_route"  >&2
-# echo "original_domain: $original_domain"  >&2
+printf "${BBlue}Creating new temporary route of $green_route_path...${NC}\n"   >&2
 cf create-route $space $original_domain --hostname $green_hostname
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
-echo "Pushing new green app $green_app_name with no route." >&2
+printf "${BBlue}Pushing new green app $green_app_name with no route.${NC}\n"   >&2
 cf push $green_app_name -f $manifest -p $path --no-route $no_start_option
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 #map green app to green route
-echo "Mapping green app $green_app_name to $green_route_path" >&2
+printf "${BBlue}Mapping green app $green_app_name to $green_route_path${NC}\n"   >&2
 cf map-route $green_app_name $original_domain -n $green_hostname
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 ######################################SMOKE TEST######################################
 
 if [ -z ${smoketest+x} ]; then
-  echo "Smoketesting skipped." >&2
+  printf "${BBlue}Smoketesting skipped.${NC}\n"   >&2
 else
-  echo "Beginning smoketest: full location: $smoketest  file: $smoketest_file" >&2
+  printf "${BBlue}Beginning smoketest: full location: $smoketest  file: $smoketest_file${NC}\n"   >&2
 
   #setting smoketest url for green app
   SMOKETEST_URL="https://$green_hostname.$original_domain"
@@ -184,19 +189,19 @@ else
     echo "Smoketest failed." >&2
     echo "Running cleanup..." >&2
     # . Rename blue app to the original app name
-    echo "Renaming blue app to the original app name" >&2
+    printf "${BBlue}Renaming blue app to the original app name${NC}\n"   >&2
     cf rename $blue_app_name $current_app_name
-    echo "success" >&2
+    printf "${BGreen}Successful.${NC}\n"   >&2
 
     # . delete the unused green route
-    echo "Delete green route" >&2
-    cf delete-route $original_domain -n $green_hostname
-    echo "success" >&2
+    printf "${BBlue}Delete green route${NC}\n"   >&2
+    cf delete-route $original_domain -n $green_hostname -f
+    printf "${BGreen}Successful.${NC}\n"   >&2
 
     #. Delete green
-    echo "Deleting app $green_app_name" >&2
+    printf "${BBlue}Deleting app $green_app_name${NC}\n"   >&2
     cf delete $green_app_name -f
-    echo "success" >&2
+    printf "${BGreen}Successful.${NC}\n"   >&2
 
     exit 1
   fi
@@ -206,50 +211,50 @@ fi
 ######################################################################################
 
 # . Map route from incoming manifest to green
-echo "Mapping original route to green app" >&2
+printf "${BBlue}Mapping original route to green app${NC}\n"   >&2
 cf map-route $green_app_name $original_domain -n $original_hostname
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 # . Unmap route to blue
-echo "Unmapping route to blue" >&2
+printf "${BBlue}Unmapping route to blue${NC}\n"   >&2
 cf unmap-route $blue_app_name $original_domain -n $original_hostname
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 # . Unmap temporary route to green
-echo "Unmapping temporary route to green" >&2
+printf "${BBlue}Unmapping temporary route to green${NC}\n"   >&2
 cf unmap-route $green_app_name $original_domain -n $green_hostname
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 # . delete the unused green route
-echo "Delete unused green route" >&2
-cf delete-route $original_domain -n $green_hostname
-echo "success" >&2
+printf "${BBlue}Delete unused green route${NC}\n"   >&2
+cf delete-route $original_domain -n $green_hostname -f
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 # . Rename green app to the original app name
-echo "Renaming green app to the original app name" >&2
+printf "${BBlue}Renaming green app to the original app name${NC}\n"   >&2
 cf rename $green_app_name $current_app_name
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
-echo "Deleting green route " >&2
+printf "${BBlue}Deleting green route${NC}\n"   >&2
 cf delete-route $original_domain -n $green_hostname -f
-echo "success" >&2
+printf "${BGreen}Successful.${NC}\n"   >&2
 
 #######If keep old app is true...
 
-if [[ -n "$keep_old_app"]] && [[$keep_old_app==true]]; then
+if [[ -n "$keep_old_app" ]] && [[ $keep_old_app==true ]]; then
   #delete blue
-  echo "Deleting app $blue_app_name" >&2
+  printf "${BBlue}Deleting app $blue_app_name${NC}\n"   >&2
   cf delete $blue_app_name -f
-  echo "success" >&2
+  printf "${BGreen}Successful.${NC}\n"   >&2
 else
   #rename blue
-  echo "Renaming app $blue_app_name to $current_app_name-old" >&2
+  printf "${BBlue}Renaming app $blue_app_name to $current_app_name-old${NC}\n"   >&2
   if [[ `cf apps | grep $current_app_name-old` ]]; then 
-echo "Previous old app being removed..." >&2
+printf "${BBlue}Previous old app being removed...${NC}\n"   >&2
  cf delete $current_app_name-old -f
    fi
   cf rename $blue_app_name $current_app_name-old
-  echo "success" >&2
+  printf "${BGreen}Successful.${NC}\n"   >&2
 fi
 
 ##done

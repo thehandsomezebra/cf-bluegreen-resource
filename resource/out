@@ -32,16 +32,16 @@ manifest_file_location=$(jq -r '.params.manifest // ""' <"$payload") #required
 manifest=/tmp/build/put/$manifest_file_location
 
 path_file=$(jq -r '.params.path // ""' <"$payload") #required to be in either the params OR read from the manifest
-if [[ ! -n ${path_file+x} ]]; then
+if [[ -n ${path_file+x} ]]; then
   path=/tmp/build/put/$path_file
 else
   path=$(yq read "$manifest" "applications.name==$current_app_name.path")
 fi
 
 ##exit if the path wasn't set from the pipeline nor the manifest
-if [[ -n $path ]]; then
+if [[ $path == "" ]]; then
   printf "${BRed}Path must be specified in the pipeline or in the manifest.${NC}\n" >&2
-#exit 1
+exit 1
 fi
 
 ###

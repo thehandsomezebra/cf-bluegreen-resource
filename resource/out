@@ -294,6 +294,13 @@ else
   printf "${BGreen}Successful.${NC}\n" >&2
 fi
 
+printf "${BBlue}Show data of deployed app:${NC}\n" >&2
+printf "${BBlue}==========================${NC}\n" >&2
+cf app $current_app_name >&2
+printf "${BGreen}=============================${NC}\n" >&2
+printf "${BGreen}Blue-Green Deploy Successful.${NC}\n" >&2
+printf "${BGreen}=============================${NC}\n" >&2
+
 ##done
 jq -n \
   --arg timestamp $(date +%s) \

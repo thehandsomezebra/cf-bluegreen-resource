@@ -150,6 +150,20 @@ else
   cf map-route $current_app_name $new_domain -n $new_hostname
   printf "${BGreen}Successful.${NC}\n" >&2
 
+##cleaning up from other deploys, if applicable.  
+#This was added due to dial tcp: i/o timeout Issue
+  
+    if [[ ! $(cf apps | grep -P "(^|\s)\Kblue-${$current_app_name}(?=\s|$)") == "" ]]; then
+    printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old blue app & blue route (if applicable).${NC}\n" >&2
+    cf delete blue-$current_app_name -f
+    cf delete-route $original_domain -n blue-$new_hostname -f
+  fi
+    if [[ ! $(cf apps | grep -P "(^|\s)\Kgreen-${$current_app_name}(?=\s|$)") == "" ]]; then
+    printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old green app & green route (if applicable).${NC}\n" >&2
+    cf delete green-$current_app_name -f
+    cf delete-route $original_domain -n green-$new_hostname -f
+  fi
+
   printf "${BGreen}Fresh deploy of $current_app_name completed. (No smoketesting completed at this time.)${NC}\n" >&2
 
 
@@ -157,9 +171,9 @@ else
   printf "${BBlue}Show data of deployed app:${NC}\n" >&2
   printf "${BBlue}==========================${NC}\n" >&2
   cf app $current_app_name >&2
-  printf "${BGreen}=============================${NC}\n" >&2
-  printf "${BGreen}Blue-Green Deploy Successful.${NC}\n" >&2
-  printf "${BGreen}=============================${NC}\n" >&2
+  printf "${BGreen}==========================${NC}\n" >&2
+  printf "${BGreen}Initial Deploy Successful.${NC}\n" >&2
+  printf "${BGreen}==========================${NC}\n" >&2
 
     ##done
     jq -n \
@@ -296,7 +310,6 @@ if [[ -n "$keep_old_app" ]] && [[ $keep_old_app==true ]]; then
   #rename blue
   printf "${BBlue}Renaming app $blue_app_name to $current_app_name-old${NC}\n" >&2
   if [[ ! $(cf apps | grep -P "(^|\s)\K${$current_app_name}-old(?=\s|$)") == "" ]]; then
-  
     printf "${BBlue}Previous old app being removed...${NC}\n" >&2
     cf delete $current_app_name-old -f
   fi

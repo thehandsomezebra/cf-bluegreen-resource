@@ -28,23 +28,20 @@ org=$(jq -r '.params.org // ""' <"$payload")                           #required
 space=$(jq -r '.params.space // ""' <"$payload")                       #required
 current_app_name=$(jq -r '.params.current_app_name // ""' <"$payload") #required
 
-
-
 manifest_file_location=$(jq -r '.params.manifest // ""' <"$payload") #required
 manifest=/tmp/build/put/$manifest_file_location
 
-
 path_file=$(jq -r '.params.path // ""' <"$payload") #required to be in either the params OR read from the manifest
-if [[ -z ${path_file+x} ]]; then
+if [[ ! -z ${path_file+x} ]]; then
   path=/tmp/build/put/$path_file
 else
-  path=$(yq read "$manifest" "applications.name==$current_app_name.path") 
+  path=$(yq read "$manifest" "applications.name==$current_app_name.path")
 fi
 
 ##exit if the path wasn't set from the pipeline nor the manifest
 if [[ -z $path ]]; then
-echo "Path must be specified in the pipeline or in the manifest."
-exit 1
+  printf "${BRed}Path must be specified in the pipeline or in the manifest.${NC}\n" >&2
+#exit 1
 fi
 
 ###

@@ -49,7 +49,7 @@ fi
 ##############################################################
 #get and set manifest variables
 manifest_env_variables_json=$(jq -r '.params.manifest_env_variables // ""' <"$payload")
-if [[ ! -n ${manifest_env_variables_json+x} ]]; then #append these variables to the manifest yml file under env:
+if [[ ! -z ${manifest_env_variables_json+x} ]]; then #append these variables to the manifest yml file under env:
 
   get_keys() {
     echo "$manifest_env_variables_json" | jq -r 'keys[]'
@@ -152,6 +152,23 @@ else
 
   printf "${BGreen}Fresh deploy of $current_app_name completed. (No smoketesting completed at this time.)${NC}\n" >&2
 
+
+  printf "${BBlue}==========================${NC}\n" >&2
+  printf "${BBlue}Show data of deployed app:${NC}\n" >&2
+  printf "${BBlue}==========================${NC}\n" >&2
+  cf app $current_app_name >&2
+  printf "${BGreen}=============================${NC}\n" >&2
+  printf "${BGreen}Blue-Green Deploy Successful.${NC}\n" >&2
+  printf "${BGreen}=============================${NC}\n" >&2
+
+    ##done
+    jq -n \
+      --arg timestamp $(date +%s) \
+      '{
+      version: {
+        timestamp: $timestamp
+      }
+    }' >&3
   exit 0
 #######################################
 fi
@@ -292,6 +309,7 @@ else
   printf "${BGreen}Successful.${NC}\n" >&2
 fi
 
+printf "${BBlue}==========================${NC}\n" >&2
 printf "${BBlue}Show data of deployed app:${NC}\n" >&2
 printf "${BBlue}==========================${NC}\n" >&2
 cf app $current_app_name >&2

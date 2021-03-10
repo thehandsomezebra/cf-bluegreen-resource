@@ -32,14 +32,14 @@ manifest_file_location=$(jq -r '.params.manifest // ""' <"$payload") #required
 manifest=/tmp/build/put/$manifest_file_location
 
 path_file=$(jq -r '.params.path // ""' <"$payload") #required to be in either the params OR read from the manifest
-if [[ ! -z ${path_file+x} ]]; then
+if [[ ! -n ${path_file+x} ]]; then
   path=/tmp/build/put/$path_file
 else
   path=$(yq read "$manifest" "applications.name==$current_app_name.path")
 fi
 
 ##exit if the path wasn't set from the pipeline nor the manifest
-if [[ -z $path ]]; then
+if [[ -n $path ]]; then
   printf "${BRed}Path must be specified in the pipeline or in the manifest.${NC}\n" >&2
 #exit 1
 fi
@@ -49,7 +49,7 @@ fi
 ##############################################################
 #get and set manifest variables
 manifest_env_variables_json=$(jq -r '.params.manifest_env_variables // ""' <"$payload")
-if [[ ! -z ${manifest_env_variables_json+x} ]]; then #append these variables to the manifest yml file under env:
+if [[ ! -n ${manifest_env_variables_json+x} ]]; then #append these variables to the manifest yml file under env:
 
   get_keys() {
     echo "$manifest_env_variables_json" | jq -r 'keys[]'
@@ -83,12 +83,12 @@ fi
 ##############################################################
 
 smoketest_file=$(jq -r '.params.smoketest // ""' <"$payload") #optional
-if [[ ! -z ${smoketest_file+x} ]]; then
+if [[ ! -n ${smoketest_file+x} ]]; then
 
   smoketest=/tmp/build/put/$smoketest_file >&2
   ## load in params, if any
   smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
-  if [[ ! -z ${smoketest_vars_json+x} ]]; then #set all those as variables here
+  if [[ ! -n ${smoketest_vars_json+x} ]]; then #set all those as variables
     smoketest_vars=$(echo $smoketest_vars_json | jq -r ' to_entries |  .[] | .key + "=\"" + .value + "\""')
     for key in ${smoketest_vars}; do
       eval ${key} >&2
@@ -211,7 +211,7 @@ printf "${BGreen}Successful.${NC}\n" >&2
 
 ######################################SMOKE TEST######################################
 
-if [ -z ${smoketest+x} ]; then
+if [ -n ${smoketest+x} ]; then
   printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
   printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
 else

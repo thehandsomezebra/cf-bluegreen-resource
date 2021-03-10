@@ -128,7 +128,7 @@ else
 
 
   ##Pull route from the manifest.
-  if [ yq read "$manifest" "applications.name==$current_app_name.routes" -l == 1 ]; then
+  if [ $(yq read "$manifest" "applications.name==$current_app_name.routes" -l) == 1 ]; then
     manifest_route=$(yq read "$manifest" "applications.name==$current_app_name.routes[0].route")
   else
     printf "${BRed}This concourse resource_type can only handle one route as provided by the manifest.${NC}\n" >&2

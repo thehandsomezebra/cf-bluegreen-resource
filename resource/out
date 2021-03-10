@@ -119,7 +119,7 @@ cf target -o $org -s $space
 printf "${BGreen}Successful.${NC}\n" >&2
 
 ##check that the app passed in legit
-if [[ $(cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)") ]]; then
+if [[ ! $(cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)") == "" ]]; then
   printf "${BBlue}$current_app_name found. Proceeding with Blue Green Deployment${NC}\n" >&2
 else
   ########## new app with new route ###########
@@ -165,7 +165,7 @@ fi
 blue_app_name="blue-$current_app_name"
 
 #check if blue exists, delete it if so.. then continue
-if [[ $(cf apps | grep -P "(^|\s)\K${blue_app_name}(?=\s|$)") ]]; then
+if [[ ! $(cf apps | grep -P "(^|\s)\K${blue_app_name}(?=\s|$)") == "" ]]; then
 
 
   printf "${BBlue}Older $blue_app_name found. Removing this app before continuing.${NC}\n" >&2
@@ -196,7 +196,7 @@ cf create-route $space $original_domain --hostname $green_hostname
 printf "${BGreen}Successful.${NC}\n" >&2
 
 #check if green exists, delete it if so.. then continue
-if [[ $(cf apps | grep -P "(^|\s)\K${green_app_name}(?=\s|$)") ]]; then
+if [[ ! $(cf apps | grep -P "(^|\s)\K${green_app_name}(?=\s|$)") == "" ]]; then
   printf "${BBlue}Older $green_app_name found. Removing this app before continuing.${NC}\n" >&2
   cf delete $green_app_name -f
   printf "${BGreen}Successful.${NC}\n" >&2
@@ -283,7 +283,7 @@ printf "${BGreen}Successful.${NC}\n" >&2
 if [[ -n "$keep_old_app" ]] && [[ $keep_old_app==true ]]; then
   #rename blue
   printf "${BBlue}Renaming app $blue_app_name to $current_app_name-old${NC}\n" >&2
-  if [[ $(cf apps | grep -P "(^|\s)\K${$current_app_name}-old(?=\s|$)") ]]; then
+  if [[ ! $(cf apps | grep -P "(^|\s)\K${$current_app_name}-old(?=\s|$)") == "" ]]; then
   
     printf "${BBlue}Previous old app being removed...${NC}\n" >&2
     cf delete $current_app_name-old -f

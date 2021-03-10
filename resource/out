@@ -126,11 +126,6 @@ else
   printf "${BRed}$current_app_name not found.${NC}\n" >&2
   printf "${BYellow}$current_app_name will be deployed.${NC}\n" >&2
 
-  ##check if hostname & domain were set.
-  if [[ ! -n "$new_hostname" ]] && [[ ! -n "$new_domain" ]]; then
-    printf "${BRed}Domain and hostname must be specified for new deployments.${NC}\n" >&2
-    exit 1
-  fi
 
   ##Pull route from the manifest.
   if [ yq read "$manifest" "applications.name==$current_app_name.routes" -l == 1 ]; then

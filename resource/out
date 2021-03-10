@@ -137,7 +137,7 @@ else
   new_hostname="$(cut -d '.' -f 1 <<<"$manifest_route")"
   new_domain="$(cut -d '.' -f 2- <<<"$manifest_route")"
 
-  printf "${BBlue}Creating new route of $new_route_path...${NC}\n" >&2
+  printf "${BBlue}Creating new route of $manifest_route...${NC}\n" >&2
   cf create-route $space $new_domain --hostname $new_hostname
   printf "${BGreen}Successful.${NC}\n" >&2
 
@@ -146,7 +146,7 @@ else
   printf "${BGreen}Successful.${NC}\n" >&2
 
   #map green app to green route
-  printf "${BBlue}Mapping app $current_app_name to $new_route_path${NC}\n" >&2
+  printf "${BBlue}Mapping app $current_app_name to $manifest_route${NC}\n" >&2
   cf map-route $current_app_name $new_domain -n $new_hostname
   printf "${BGreen}Successful.${NC}\n" >&2
 

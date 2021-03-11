@@ -239,10 +239,9 @@ printf "${BGreen}Successful.${NC}\n" >&2
 
 ######################################SMOKE TEST######################################
 
-if [ -n ${smoketest+x} ]; then
-  printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
-  printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
-else
+if [[ ! -z ${smoketest+x} ]] && [[ ! $smoketest == "" ]]; then
+
+ 
   printf "${BYellow}Beginning smoketest: $smoketest_file${NC}\n" >&2
 
   #setting smoketest url for green app
@@ -274,6 +273,9 @@ else
 
     exit 1
   fi
+else
+ printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
+ printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
 
 fi
 

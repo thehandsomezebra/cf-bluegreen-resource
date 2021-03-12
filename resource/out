@@ -41,7 +41,7 @@ fi
 ##exit if the path wasn't set from the pipeline nor the manifest
 if [[ $path == "" ]]; then
   printf "${BRed}Path must be specified in the pipeline or in the manifest.${NC}\n" >&2
-exit 1
+  exit 1
 fi
 
 ###
@@ -86,7 +86,6 @@ smoketest_file=$(jq -r '.params.smoketest // ""' <"$payload") #optional
 # if [[ ! -n ${smoketest_file+x} ]]; then
 if [[ ! -z ${smoketest_file+x} ]] && [[ ! $smoketest_file == "" ]]; then
 
-
   smoketest=/tmp/build/put/$smoketest_file >&2
   ## load in params, if any
   smoketest_vars_json=$(jq -r '.params.smoketest_variables // ""' <"$payload")
@@ -116,9 +115,50 @@ printf "${BBlue}logging in${NC}\n" >&2
 cf login -a "$api" -u "$username" -p "$password" $skipssl
 printf "${BGreen}Successful.${NC}\n" >&2
 
-printf "${BBlue}setting target${NC}\n" >&2
-cf target -o $org -s $space
-printf "${BGreen}Successful.${NC}\n" >&2
+#IF create_new is true...
+#Check if the org and space exist... create it if it doesn't.
+create_new=$(jq -r '.params.create_new // ""' <"$payload") #Optional
+if [[ -n "$create_new" ]] && [[ $create_new==true ]]; then
+
+  #check if org exists - create it if it does not.
+  if [[ ! $(cf orgs | grep -P "(^|\s)\K${org}(?=\s|$)") == "" ]]; then
+    printf "${BGreen}Org exists, setting target.${NC}\n" >&2
+    cf target -o $org
+    printf "${BGreen}Successful.${NC}\n" >&2
+  else
+    printf "${BYellow}Org does not exist. Creating org..${NC}\n" >&2
+    cf create-org $org
+    printf "${BGreen}Successful.${NC}\n" >&2
+    printf "${BBlue}Now setting target.${NC}\n" >&2
+    cf target -o $org
+    printf "${BGreen}Successful.${NC}\n" >&2
+  fi
+
+  ##do the same for space.
+  if [[ ! $(cf spaces | grep -P "(^|\s)\K${space}(?=\s|$)") == "" ]]; then
+    printf "${BBlue}Space exists, setting target.${NC}\n" >&2
+    cf target -s $space
+    printf "${BGreen}Successful.${NC}\n" >&2
+  else
+    printf "${BYellow}Space does not exist. Creating space.${NC}\n" >&2
+    cf create-space $space -o $org
+    printf "${BGreen}Successful.${NC}\n" >&2
+    printf "${BBlue}Now setting target.${NC}\n" >&2
+    cf target -s $space
+    printf "${BGreen}Successful.${NC}\n" >&2
+  fi
+
+else
+
+  #don't bother checking -- just go ahead and set the target.
+  #If it doesn't exist, it will error and it will be up to the
+  #user to add the org and space manually.
+
+  printf "${BBlue}Setting target${NC}\n" >&2
+  cf target -o $org -s $space
+  printf "${BGreen}Successful.${NC}\n" >&2
+
+fi
 
 ##check that the app passed in legit
 if [[ ! $(cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)") == "" ]]; then
@@ -127,7 +167,6 @@ else
   ########## new app with new route ###########
   printf "${BRed}$current_app_name not found.${NC}\n" >&2
   printf "${BYellow}$current_app_name will be deployed.${NC}\n" >&2
-
 
   ##Pull route from the manifest.
   if [ $(yq read "$manifest" "applications.name==$current_app_name.routes" -l) == 1 ]; then
@@ -152,22 +191,21 @@ else
   cf map-route $current_app_name $new_domain -n $new_hostname
   printf "${BGreen}Successful.${NC}\n" >&2
 
-##cleaning up from other deploys, if applicable.  
-#This was added due to dial tcp: i/o timeout Issue
-  
-  if [[ ! $(cf apps | grep -P "(^|\s)\Kblue-${$current_app_name}(?=\s|$)") == "" ]]; then
+  ##cleaning up from other deploys, if applicable.
+  #This was added due to dial tcp: i/o timeout Issue
+
+  if [[ ! $(cf apps | grep -P "(^|\s)\Kblue-${current_app_name}(?=\s|$)") == "" ]]; then
     printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old blue app & blue route (if applicable).${NC}\n" >&2
     cf delete blue-$current_app_name -f
     cf delete-route $original_domain -n blue-$new_hostname -f
   fi
-    if [[ ! $(cf apps | grep -P "(^|\s)\Kgreen-${$current_app_name}(?=\s|$)") == "" ]]; then
+  if [[ ! $(cf apps | grep -P "(^|\s)\Kgreen-${current_app_name}(?=\s|$)") == "" ]]; then
     printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old green app & green route (if applicable).${NC}\n" >&2
     cf delete green-$current_app_name -f
     cf delete-route $original_domain -n green-$new_hostname -f
   fi
 
   printf "${BGreen}Fresh deploy of $current_app_name completed. (No smoketesting completed at this time.)${NC}\n" >&2
-
 
   printf "${BGreen}==========================${NC}\n" >&2
   printf "${BGreen}Show data of deployed app:${NC}\n" >&2
@@ -177,10 +215,10 @@ else
   printf "${BGreen}Initial Deploy Successful.${NC}\n" >&2
   printf "${BGreen}==========================${NC}\n" >&2
 
-    ##done
-    jq -n \
-      --arg timestamp $(date +%s) \
-      '{
+  ##done
+  jq -n \
+    --arg timestamp $(date +%s) \
+    '{
       version: {
         timestamp: $timestamp
       }
@@ -191,9 +229,6 @@ fi
 
 ## rename current_app_name to blue
 blue_app_name="blue-$current_app_name"
-
-
-
 
 #check if blue exists, delete it if so.. then continue
 if [[ ! $(cf apps | grep -P "(^|\s)\K${blue_app_name}(?=\s|$)") == "" ]]; then
@@ -244,7 +279,6 @@ printf "${BGreen}Successful.${NC}\n" >&2
 
 if [[ ! -z ${smoketest+x} ]] && [[ ! $smoketest == "" ]]; then
 
- 
   printf "${BYellow}Beginning smoketest: $smoketest_file${NC}\n" >&2
 
   #setting smoketest url for green app
@@ -277,8 +311,8 @@ if [[ ! -z ${smoketest+x} ]] && [[ ! $smoketest == "" ]]; then
     exit 1
   fi
 else
- printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
- printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
+  printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
+  printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
 
 fi
 
@@ -314,7 +348,7 @@ printf "${BGreen}Successful.${NC}\n" >&2
 if [[ -n "$keep_old_app" ]] && [[ $keep_old_app==true ]]; then
   #rename blue
   printf "${BBlue}Renaming app $blue_app_name to $current_app_name-old${NC}\n" >&2
-  if [[ ! $(cf apps | grep -P "(^|\s)\K${$current_app_name}-old(?=\s|$)") == "" ]]; then
+  if [[ ! $(cf apps | grep -P "(^|\s)\K${current_app_name}-old(?=\s|$)") == "" ]]; then
     printf "${BBlue}Previous old app being removed...${NC}\n" >&2
     cf delete $current_app_name-old -f
   fi

@@ -10,6 +10,7 @@ A [manifest](https://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html) t
 
 - `org`: _Required._ The organization to target.
 - `space`: _Required._ The space to target.
+- `create_new`: _Optional._ Set `true` to create the org and space if they do not yet exist. This is useful for first-time deployments - no need to adjust the pipeline.
 - `current_app_name`: _Required._ This should be the name of the application that this will deploy as blue/green. Note: this requires app to exist & will not work for fresh deployments.
 cf cli v6 specific params
 - `path`: _Optional._ Path to the application to push.  (If this isn't set then it will be read from the manifest instead.)
@@ -37,6 +38,7 @@ jobs:
       params:
         org: myorg
         space: myspace
+        create_new: true
         current_app_name: myapp-ui
         path: path/to/myapp-*.jar
         smoketest: path/to/mytest.sh

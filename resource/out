@@ -155,7 +155,7 @@ else
 ##cleaning up from other deploys, if applicable.  
 #This was added due to dial tcp: i/o timeout Issue
   
-    if [[ ! $(cf apps | grep -P "(^|\s)\Kblue-${$current_app_name}(?=\s|$)") == "" ]]; then
+  if [[ ! $(cf apps | grep -P "(^|\s)\Kblue-${$current_app_name}(?=\s|$)") == "" ]]; then
     printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old blue app & blue route (if applicable).${NC}\n" >&2
     cf delete blue-$current_app_name -f
     cf delete-route $original_domain -n blue-$new_hostname -f
@@ -169,9 +169,9 @@ else
   printf "${BGreen}Fresh deploy of $current_app_name completed. (No smoketesting completed at this time.)${NC}\n" >&2
 
 
-  printf "${BBlue}==========================${NC}\n" >&2
-  printf "${BBlue}Show data of deployed app:${NC}\n" >&2
-  printf "${BBlue}==========================${NC}\n" >&2
+  printf "${BGreen}==========================${NC}\n" >&2
+  printf "${BGreen}Show data of deployed app:${NC}\n" >&2
+  printf "${BGreen}==========================${NC}\n" >&2
   cf app $current_app_name >&2
   printf "${BGreen}==========================${NC}\n" >&2
   printf "${BGreen}Initial Deploy Successful.${NC}\n" >&2
@@ -192,10 +192,11 @@ fi
 ## rename current_app_name to blue
 blue_app_name="blue-$current_app_name"
 
+
+
+
 #check if blue exists, delete it if so.. then continue
 if [[ ! $(cf apps | grep -P "(^|\s)\K${blue_app_name}(?=\s|$)") == "" ]]; then
-
-
   printf "${BBlue}Older $blue_app_name found. Removing this app before continuing.${NC}\n" >&2
   cf delete $blue_app_name -f
   printf "${BGreen}Successful.${NC}\n" >&2

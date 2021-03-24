@@ -197,12 +197,12 @@ else
   if [[ ! $(cf apps | grep -P "(^|\s)\Kblue-${current_app_name}(?=\s|$)") == "" ]]; then
     printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old blue app & blue route (if applicable).${NC}\n" >&2
     cf delete blue-$current_app_name -f
-    cf delete-route $original_domain -n blue-$new_hostname -f
+    cf delete-route $new_domain -n blue-$new_hostname -f
   fi
   if [[ ! $(cf apps | grep -P "(^|\s)\Kgreen-${current_app_name}(?=\s|$)") == "" ]]; then
     printf "${BBlue}Performing cleanup from other unsuccessful blue-green deploys: removing old green app & green route (if applicable).${NC}\n" >&2
     cf delete green-$current_app_name -f
-    cf delete-route $original_domain -n green-$new_hostname -f
+    cf delete-route $new_domain -n green-$new_hostname -f
   fi
 
   printf "${BGreen}Fresh deploy of $current_app_name completed. (No smoketesting completed at this time.)${NC}\n" >&2

@@ -54,7 +54,7 @@ jobs:
 
 ```yml
 resources:
-  - name: cf-env-sandbox
+  - name: cf-env
     icon: cloud
     type: cf-bluegreen-resource
     source:

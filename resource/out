@@ -103,6 +103,8 @@ keep_old_app=$(jq -r '.params.keep_old_app // ""' <"$payload") #optional
 api=$(jq -r '.source.api // ""' <"$payload")
 username=$(jq -r '.source.username // ""' <"$payload")
 password=$(jq -r '.source.password // ""' <"$payload")
+##If this is set, use this as an environmental variable https://cli.cloudfoundry.org/en-US/v6/  https://cli.cloudfoundry.org/en-US/v7/
+cf_dial_timeout=$(jq -r '.source.cf_dial_timeout // ""' <"$payload") && [ -n "$cf_dial_timeout" ] && export CF_DIAL_TIMEOUT=$cf_dial_timeout
 
 skip_cert_check=$(jq -r '.source.skip_cert_check // ""' <"$payload")
 if [[ -n "$skip_cert_check" ]] && [[ $skip_cert_check==true ]]; then

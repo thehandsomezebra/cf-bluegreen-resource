@@ -58,10 +58,11 @@ resources:
     icon: cloud
     type: cf-bluegreen-resource
     source:
-      api: https://api.system.environment.company.io
-      username: admin
-      password: yourpassword
-      skip_cert_check: true
+      api: https://api.system.environment.company.io   #Required
+      username: admin          #Required
+      password: yourpassword   #Required
+      skip_cert_check: true    #Optional
+      cf_dial_timeout: 300     #Optional: You may set this if you are experiencing i/o timeout errors.
 ```
 
 ```yml

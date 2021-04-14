@@ -207,7 +207,42 @@ else
     cf delete-route $new_domain -n green-$new_hostname -f
   fi
 
-  printf "${BGreen}Fresh deploy of $current_app_name completed. (No smoketesting completed at this time.)${NC}\n" >&2
+  printf "${BGreen}Fresh deploy of $current_app_name completed.${NC}\n" >&2
+
+
+######################################################################################
+######################################SMOKE TEST######################################
+######################################################################################
+
+if [[ ! -z ${smoketest+x} ]] && [[ ! $smoketest == "" ]]; then
+
+  printf "${BYellow}Beginning smoketest: $smoketest_file${NC}\n" >&2
+
+  #setting smoketest url for green app
+  SMOKETEST_URL="https://$new_hostname.$new_domain"
+
+  chmod +x $smoketest        #set the script to executable
+  TEST=$(source $smoketest)  #runs the test
+  STATUS=$?                  #gets the exit code/last executed cmd from the test
+  if [ $STATUS -eq 0 ]; then # report back on smoketest
+    printf "${BGreen}Smoketest successfully passed!${NC}\n" >&2
+  else
+    printf "${BRed}Smoketest failed!${NC}\n" >&2
+    printf "${BRed}Running cleanup...${NC}\n" >&2
+    exit 1
+  fi
+else
+  printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
+  printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
+
+fi
+
+######################################################################################
+######################################################################################
+######################################################################################
+
+
+
 
   printf "${BGreen}==========================${NC}\n" >&2
   printf "${BGreen}Show data of deployed app:${NC}\n" >&2

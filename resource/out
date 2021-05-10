@@ -106,6 +106,14 @@ password=$(jq -r '.source.password // ""' <"$payload")
 ##If this is set, use this as an environmental variable https://cli.cloudfoundry.org/en-US/v6/  https://cli.cloudfoundry.org/en-US/v7/
 cf_dial_timeout=$(jq -r '.source.cf_dial_timeout // ""' <"$payload") && [ -n "$cf_dial_timeout" ] && export CF_DIAL_TIMEOUT=$cf_dial_timeout
 
+#expanding to add cf7 support.
+# cf create-route
+#   CF6:
+#     cf create-route SPACE DOMAIN [--hostname HOSTNAME] [--path PATH]
+#   CF7:
+#     cf create-route DOMAIN [--hostname HOSTNAME] [--path PATH]
+cf_version=$(jq -r '.source.cf_version // ""' <"$payload")
+
 skip_cert_check=$(jq -r '.source.skip_cert_check // ""' <"$payload")
 if [[ -n "$skip_cert_check" ]] && [[ $skip_cert_check==true ]]; then
   skipssl=" --skip-ssl-validation"
@@ -181,11 +189,19 @@ else
   new_domain="$(cut -d '.' -f 2- <<<"$manifest_route")"
 
   printf "${BBlue}Creating new route of $manifest_route...${NC}\n" >&2
-  cf create-route $space $new_domain --hostname $new_hostname
+
+  if [[ $cf_version == "7" ]]; then
+    cf create-route $new_domain --hostname $new_hostname
+  else
+    cf create-route $space $new_domain --hostname $new_hostname
+  fi
+
   printf "${BGreen}Successful.${NC}\n" >&2
 
   printf "${BBlue}Pushing new app $current_app_name with no route.${NC}\n" >&2
+
   cf push $current_app_name -f $manifest -p $path --no-route
+
   printf "${BGreen}Successful.${NC}\n" >&2
 
   #map green app to green route
@@ -209,40 +225,36 @@ else
 
   printf "${BGreen}Fresh deploy of $current_app_name completed.${NC}\n" >&2
 
+  ######################################################################################
+  ######################################SMOKE TEST######################################
+  ######################################################################################
 
-######################################################################################
-######################################SMOKE TEST######################################
-######################################################################################
+  if [[ ! -z ${smoketest+x} ]] && [[ ! $smoketest == "" ]]; then
 
-if [[ ! -z ${smoketest+x} ]] && [[ ! $smoketest == "" ]]; then
+    printf "${BYellow}Beginning smoketest: $smoketest_file${NC}\n" >&2
 
-  printf "${BYellow}Beginning smoketest: $smoketest_file${NC}\n" >&2
+    #setting smoketest url for green app
+    SMOKETEST_URL="https://$new_hostname.$new_domain"
 
-  #setting smoketest url for green app
-  SMOKETEST_URL="https://$new_hostname.$new_domain"
-
-  chmod +x $smoketest        #set the script to executable
-  TEST=$(source $smoketest)  #runs the test
-  STATUS=$?                  #gets the exit code/last executed cmd from the test
-  if [ $STATUS -eq 0 ]; then # report back on smoketest
-    printf "${BGreen}Smoketest successfully passed!${NC}\n" >&2
+    chmod +x $smoketest        #set the script to executable
+    TEST=$(source $smoketest)  #runs the test
+    STATUS=$?                  #gets the exit code/last executed cmd from the test
+    if [ $STATUS -eq 0 ]; then # report back on smoketest
+      printf "${BGreen}Smoketest successfully passed!${NC}\n" >&2
+    else
+      printf "${BRed}Smoketest failed!${NC}\n" >&2
+      printf "${BRed}Running cleanup...${NC}\n" >&2
+      exit 1
+    fi
   else
-    printf "${BRed}Smoketest failed!${NC}\n" >&2
-    printf "${BRed}Running cleanup...${NC}\n" >&2
-    exit 1
+    printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
+    printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
+
   fi
-else
-  printf "${BYellow}Smoketest script not specified in pipeline.${NC}\n" >&2
-  printf "${BBlue}Smoketesting skipped.${NC}\n" >&2
 
-fi
-
-######################################################################################
-######################################################################################
-######################################################################################
-
-
-
+  ######################################################################################
+  ######################################################################################
+  ######################################################################################
 
   printf "${BGreen}==========================${NC}\n" >&2
   printf "${BGreen}Show data of deployed app:${NC}\n" >&2
@@ -293,7 +305,13 @@ green_hostname=green-$original_hostname
 green_route_path=$green_hostname.$original_domain
 
 printf "${BBlue}Creating new temporary route of $green_route_path...${NC}\n" >&2
-cf create-route $space $original_domain --hostname $green_hostname
+
+if [[ $cf_version == "7" ]]; then
+  cf create-route $original_domain --hostname $green_hostname
+else
+  cf create-route $space $original_domain --hostname $green_hostname
+fi
+
 printf "${BGreen}Successful.${NC}\n" >&2
 
 #check if green exists, delete it if so.. then continue
@@ -304,7 +322,9 @@ if [[ ! $(cf apps | grep -P "(^|\s)\K${green_app_name}(?=\s|$)") == "" ]]; then
 fi
 
 printf "${BBlue}Pushing new green app $green_app_name with no route.${NC}\n" >&2
+
 cf push $green_app_name -f $manifest -p $path --no-route
+
 printf "${BGreen}Successful.${NC}\n" >&2
 
 #map green app to green route

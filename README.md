@@ -63,6 +63,7 @@ resources:
       password: yourpassword   #Required
       skip_cert_check: true    #Optional
       cf_dial_timeout: 300     #Optional: You may set this if you are experiencing i/o timeout errors.
+      cf_version: 7            #Optional for CF6. Required for CF7.
 ```
 
 ```yml
@@ -77,8 +78,6 @@ resource_types:
 ----
 
 ### Planned later improvements:
-
-- Currently this works for just cf6.  Plans to make this work universally with 6 & 7 coming soon.
 - Plans to add `manifest_vars` for map of variables to pass to manifest.
 - Plans to add `manifest_vars_files` for file with variables to pass to manifest.
 ```yml

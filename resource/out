@@ -170,6 +170,30 @@ else
 
 fi
 
+
+  #check if that app exists AND actually is running with no route.. 
+  if [[ ! $(cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)") == "" && $(cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)" | awk '{print $6}') == "" ]]; then
+  
+      #reason for this check & cleanout:
+      ### https://github.com/thehandsomezebra/cf-bluegreen-resource/issues/5
+      #Something must have gone wrong with a previous deploy.
+      # we will delete the app deployment -- there's no routes.  
+      #Then the next check won't find the app and start from scratch.
+########
+# $ cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)" | awk '{print $2}'
+# started
+########
+# $ cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)" | awk '{print $6}'
+# <a route would appear here>
+########
+
+  printf "${BBlue}$current_app_name found, but has no route.${NC}\n" >&2
+  printf "${BBlue}Cleaning up app before we continue.${NC}\n" >&2
+  cf delete $current_app_name -f
+
+  fi
+
+
 ##check that the app passed in legit
 if [[ ! $(cf apps | grep -P "(^|\s)\K${current_app_name}(?=\s|$)") == "" ]]; then
   printf "${BBlue}$current_app_name found. Proceeding with Blue Green Deployment${NC}\n" >&2

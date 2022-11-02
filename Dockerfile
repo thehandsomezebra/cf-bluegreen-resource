@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:kinetic-20220830
 
 ENV COLUMNS=80
 ENV VAULT_VERSION=1.2.2
